@@ -21,6 +21,7 @@ sed -i 's|^[[:space:]]*#include <User_Setup[^>]*>|//#include <User_Setup.h>|' "$
 sed -i '0,/^\/\/#include <User_Setup.h>/s||#include <User_Setup.h>|' "$build_dir/libraries/TFT_eSPI/User_Setup_Select.h"
 "$cli_bin" compile \
   --fqbn 'esp32:esp32:esp32c5:FlashSize=8M,PartitionScheme=default_8MB,PSRAM=enabled' \
+  --build-property "compiler.c.elf.extra_flags=" \
   --build-property 'compiler.cpp.extra_flags=-DMARAUDER_V8 -DCONFIG_ASYNC_TCP_STACK_SIZE=8192' \
   --build-property 'compiler.c.extra_flags=-DMARAUDER_V8 -DCONFIG_ASYNC_TCP_STACK_SIZE=8192' \
   --library "$build_dir/libraries/TFT_eSPI" \

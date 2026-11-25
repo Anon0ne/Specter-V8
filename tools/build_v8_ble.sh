@@ -26,6 +26,7 @@ if [[ ${SPECTER_HTTP_DIAGNOSTICS:-0} == 1 ]]; then
  flags+=' -DCORE_DEBUG_LEVEL=1 -DSPECTER_HTTP_DIAGNOSTICS=1'
 fi
 "$cli" compile --fqbn 'esp32:esp32:esp32c5:FlashSize=8M,PartitionScheme=default_8MB,PSRAM=enabled' \
+ --build-property "compiler.c.elf.extra_flags=" \
  --build-property "compiler.cpp.extra_flags=$flags" \
  --build-property "compiler.c.extra_flags=$flags" \
  --library "$out/libraries/TFT_eSPI" --build-path "$out/build" \

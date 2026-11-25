@@ -63,3 +63,12 @@ use the named `Specter-V8-…-source.zip` asset for the curated V8 package.
 The multi-board build/nightly/installer publishing workflows inherited from
 upstream were replaced with a V8-only source/build workflow. No device is flashed
 by that workflow, and no firmware binaries are published by it.
+
+## Stock SDK raw-transmit limitation
+
+This beta retains the stock ESP32-C5 SDK raw-frame validation. It does not
+replace that validation function and does not use permissive duplicate-symbol
+linker flags. Raw-transmit operations that depended on a patched driver or that
+override may be rejected or unavailable; their catalog/menu presence is not a
+hardware-validation claim. Ordinary AP/HTTP and passive inventory checks do
+not establish that every transmit mode works. No driver bypass is enabled.

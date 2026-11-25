@@ -1,3 +1,7 @@
+> Public beta limitation: stock C5 raw-frame validation is retained. Raw-transmit
+> features that depended on patched-driver behavior may be unavailable. Menu or
+> CLI coverage in this historical inventory does not establish radio acceptance.
+
 # Specter feature map
 
 Inventory for `specter/ble-touchscreen`, checked 2026-11-02 against source and

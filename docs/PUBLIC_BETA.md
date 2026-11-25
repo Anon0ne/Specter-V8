@@ -81,3 +81,12 @@ private data. No live secrets or captures are supplied as test fixtures.
 
 The security contact is listed in SECURITY.md. This document records known limits and
 test coverage; it is not a declaration that all modules are hardware-validated.
+
+## Stock SDK raw-transmit limitation
+
+This beta retains the stock ESP32-C5 SDK raw-frame validation. It does not
+replace that validation function and does not use permissive duplicate-symbol
+linker flags. Raw-transmit operations that depended on a patched driver or that
+override may be rejected or unavailable; their catalog/menu presence is not a
+hardware-validation claim. Ordinary AP/HTTP and passive inventory checks do
+not establish that every transmit mode works. No driver bypass is enabled.

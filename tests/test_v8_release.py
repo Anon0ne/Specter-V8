@@ -36,6 +36,7 @@ class V8ReleaseTests(unittest.TestCase):
                 args = (root / "args").read_text()
                 self.assertIn("esp32:esp32:esp32c5:", args)
                 self.assertIn("CONFIG_ASYNC_TCP_STACK_SIZE=8192", args)
+                self.assertIn("compiler.c.elf.extra_flags=", args)
 
     def test_target_guard(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -220,3 +220,12 @@ premium membership purchased directly from [Anon0ne](https://github.com/Anon0ne)
 Contact Anon0ne directly for membership details, pricing and premium-edition
 access. Premium code and licensing infrastructure are not part of this firmware
 or the public-beta GUI package.
+
+## Stock SDK raw-transmit limitation
+
+This beta retains the stock ESP32-C5 SDK raw-frame validation. It does not
+replace that validation function and does not use permissive duplicate-symbol
+linker flags. Raw-transmit operations that depended on a patched driver or that
+override may be rejected or unavailable; their catalog/menu presence is not a
+hardware-validation claim. Ordinary AP/HTTP and passive inventory checks do
+not establish that every transmit mode works. No driver bypass is enabled.

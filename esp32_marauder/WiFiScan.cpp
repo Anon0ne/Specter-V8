@@ -64,12 +64,8 @@ size_t WiFiScan::retainedBleDeviceCount() const {
   return ble_devices == nullptr ? 0 : ble_devices->size();
 }
 
-extern "C" int ieee80211_raw_frame_sanity_check(int32_t arg, int32_t arg2, int32_t arg3){
-    if (arg == 31337)
-      return 1;
-    else
-      return 0;
-}
+// The V8 public beta uses the stock SDK raw-frame validation implementation.
+// Do not override driver validation symbols or probe them with sentinel inputs.
 
 extern "C" {
   uint8_t esp_base_mac_addr[6];
@@ -1913,10 +1909,7 @@ bool WiFiScan::isFlockCamera(const uint8_t* payload, size_t len, const String& n
 }
 
 void WiFiScan::RunSetup() {
-  if (ieee80211_raw_frame_sanity_check(31337, 0, 0) == 1)
-    this->wsl_bypass_enabled = true;
-  else
-    this->wsl_bypass_enabled = false;
+  this->wsl_bypass_enabled = false;
 
   #ifdef HAS_PSRAM
     ssids = new (ps_malloc(sizeof(LinkedList<ssid>))) LinkedList<ssid>();
