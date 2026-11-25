@@ -3,6 +3,9 @@
 
 #include "BatteryInterface.h"
 #include "lang_var.h"
+#ifdef HAS_AXP192
+AXP192 axp192_obj;
+#endif
 BatteryInterface::BatteryInterface() {
 
 }

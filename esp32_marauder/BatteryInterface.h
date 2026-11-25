@@ -20,7 +20,7 @@
 
 #ifdef HAS_AXP192
   #include "AXP192.h"
-  AXP192 axp192_obj;
+  extern AXP192 axp192_obj;
 #endif
 
 #ifndef BATTERY_ADC_PIN  // not 12c

@@ -10,7 +10,7 @@ char nmeaBuffer[100];
 
 MicroNMEA nmea(nmeaBuffer, sizeof(nmeaBuffer));
 
-HardwareSerial Serial2(GPS_SERIAL_INDEX);
+static HardwareSerial specterGpsSerial(GPS_SERIAL_INDEX);
 
 static const char *PCAS_SET_115200 = "$PCAS01,5*19\r\n";
 
@@ -19,7 +19,7 @@ static const uint32_t PROBE_MS = 1200;
 void GpsInterface::begin() {
 
   
-  Serial2.begin(9600, SERIAL_8N1, GPS_TX, GPS_RX);
+  specterGpsSerial.begin(9600, SERIAL_8N1, GPS_TX, GPS_RX);
 
   uint32_t gps_baud = this->initGpsBaudAndForce115200();
 
@@ -28,18 +28,18 @@ void GpsInterface::begin() {
 
   delay(1000);
 
-  MicroNMEA::sendSentence(Serial2, "$PSTMSETPAR,1201,0x00000042");
-  MicroNMEA::sendSentence(Serial2, "$PSTMSAVEPAR");
+  MicroNMEA::sendSentence(specterGpsSerial, "$PSTMSETPAR,1201,0x00000042");
+  MicroNMEA::sendSentence(specterGpsSerial, "$PSTMSAVEPAR");
 
-  MicroNMEA::sendSentence(Serial2, "$PSTMSRR");
+  MicroNMEA::sendSentence(specterGpsSerial, "$PSTMSRR");
 
   delay(1000);
 
-  if (Serial2.available()) {
+  if (specterGpsSerial.available()) {
     this->gps_enabled = true;
-    while (Serial2.available()) {
+    while (specterGpsSerial.available()) {
       //Fetch the character one by one
-      char c = Serial2.read();
+      char c = specterGpsSerial.read();
       //Serial.print(c);
       //Pass the character to the library
       nmea.process(c);
@@ -59,18 +59,18 @@ void GpsInterface::begin() {
 }
 
 bool GpsInterface::probeBaud(uint32_t baud) {
-  Serial2.end();
+  specterGpsSerial.end();
   delay(50);
 
-  Serial2.begin(baud, SERIAL_8N1, GPS_TX, GPS_RX);
+  specterGpsSerial.begin(baud, SERIAL_8N1, GPS_TX, GPS_RX);
 
   uint32_t start = millis();
   bool sawDollar = false;
   bool parsedSentence = false;
 
   while (millis() - start < PROBE_MS) {
-    while (Serial2.available()) {
-      char c = (char)Serial2.read();
+    while (specterGpsSerial.available()) {
+      char c = (char)specterGpsSerial.read();
 
       if (c == '$') {
         sawDollar = true;
@@ -94,8 +94,8 @@ bool GpsInterface::probeBaud(uint32_t baud) {
 }
 
 void GpsInterface::setGpsTo115200From9600() {
-  Serial2.print(PCAS_SET_115200);
-  Serial2.flush();
+  specterGpsSerial.print(PCAS_SET_115200);
+  specterGpsSerial.flush();
   delay(200);
 }
 
@@ -386,7 +386,7 @@ void GpsInterface::flush_queue_textin(){
 }
 
 void GpsInterface::sendSentence(const char* sentence){
-  MicroNMEA::sendSentence(Serial2, sentence);
+  MicroNMEA::sendSentence(specterGpsSerial, sentence);
 }
 
 void GpsInterface::sendSentence(Stream &s, const char* sentence){
@@ -764,9 +764,9 @@ String GpsInterface::getNmeaNotparsed() {
 }
 
 void GpsInterface::main() {
-  while (Serial2.available()) {
+  while (specterGpsSerial.available()) {
     //Fetch the character one by one
-    char c = Serial2.read();
+    char c = specterGpsSerial.read();
     //Serial.print(c);
     //Pass the character to the library
     nmea.process(c);

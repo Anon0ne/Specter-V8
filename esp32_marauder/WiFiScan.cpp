@@ -37,6 +37,11 @@ static mbedtls_mpi prec_int;
 static mbedtls_ctr_drbg_context ctr_drbg;
 static mbedtls_entropy_context entropy;
 
+#ifdef HAS_BT
+bool connectionPending = false;
+bool operationInProgress = false;
+#endif
+
 LinkedList<ssid>* ssids;
 LinkedList<AccessPoint>* access_points;
 LinkedList<Station>* stations;
