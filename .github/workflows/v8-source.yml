@@ -1,0 +1,34 @@
+name: Marauder V8 source validation
+on:
+  push:
+    branches: [main]
+    tags: ['v*-v8.*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  v8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: arduino/setup-arduino-cli@v2
+        with:
+          version: 1.3.1
+      - name: Install pinned V8 dependencies
+        run: python3 tools/setup_v8_dependencies.py "$RUNNER_TEMP/v8-deps"
+      - name: Build Marauder V8 only
+        env:
+          ARDUINO_CLI: arduino-cli
+          ARDUINO_DIRECTORIES_USER: ${{ runner.temp }}/v8-deps
+          TFT_ESPI_DIR: ${{ runner.temp }}/v8-deps/libraries/TFT_eSPI
+        run: bash tools/build_v8_ble.sh "$RUNNER_TEMP/v8-build"
+      - name: Check V8 target guard and release policy
+        run: python3 tests/test_v8_release.py
+      - name: Package source
+        run: python3 tools/package_v8_source.py --version "$GITHUB_SHA" --output "$RUNNER_TEMP/v8-source"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Specter-V8-source
+          path: ${{ runner.temp }}/v8-source/*

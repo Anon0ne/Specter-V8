@@ -1,0 +1,6 @@
+{
+  "snapshot_date": "2026-11-25",
+  "description": "Clean Marauder V8 source snapshot from the maintainer-reviewed private development line; original copyright notices retained",
+  "target": "Marauder V8 / ESP32-C5 only",
+  "legacy_git_history_included": false
+}

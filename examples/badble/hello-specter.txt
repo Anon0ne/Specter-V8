@@ -1,0 +1,7 @@
+REM Specter SD keyboard test
+DEFAULTDELAY 30
+DELAY 1000
+STRING Hello from Specter SD
+DELAY 250
+STRING .
+REPEAT 2

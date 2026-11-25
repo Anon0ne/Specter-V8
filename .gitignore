@@ -1,0 +1,25 @@
+
+.pio/
+.venv/
+coverage.xml
+.vscode/arduino.json
+.vscode/c_cpp_properties.json
+.vscode/settings.json
+esp32_marauder/.vscode/settings.json
+__pycache__/
+*.pyc
+
+# Public beta: keep local secrets and captured data outside source control.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pcap
+*.pcapng
+*.kismet
+*.mitm
+/portal_loot/
+/captures/
+/specter/sessions/
+/dist/

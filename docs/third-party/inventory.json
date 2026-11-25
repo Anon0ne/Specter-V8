@@ -1,0 +1,123 @@
+[
+  {
+    "name": "Adafruit BusIO",
+    "version": "1.15.0",
+    "url": "https://github.com/adafruit/Adafruit_BusIO",
+    "license_files": [
+      {
+        "file": "Adafruit_BusIO-LICENSE",
+        "sha256": "86e9fafdb50d2a85d8fef369b4635b5a1b89160603e5b1f95484df0804b49508"
+      }
+    ]
+  },
+  {
+    "name": "Adafruit MAX1704X",
+    "version": "1.0.2",
+    "url": "https://github.com/adafruit/Adafruit_MAX1704X",
+    "license_files": [
+      {
+        "file": "Adafruit_MAX1704X-license.txt",
+        "sha256": "9aa7720b0f8b372e887b5e4908e1974857e1eead89875c59224c9658e7add695"
+      }
+    ]
+  },
+  {
+    "name": "ArduinoJson",
+    "version": "6.18.2",
+    "url": "https://arduinojson.org/?utm_source=meta&utm_medium=library.properties",
+    "license_files": [
+      {
+        "file": "ArduinoJson-LICENSE.md",
+        "sha256": "806c285da319a31a21f02701aa955582039e909aef16b646e1c9027a7ff50f72"
+      }
+    ]
+  },
+  {
+    "name": "Async TCP",
+    "version": "3.4.8",
+    "url": "https://github.com/ESP32Async/AsyncTCP.git",
+    "license_files": [
+      {
+        "file": "Async_TCP-LICENSE",
+        "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768"
+      }
+    ]
+  },
+  {
+    "name": "ESP32Ping",
+    "version": "1.6",
+    "url": "https://github.com/marian-craciunescu/ESP32Ping",
+    "license_files": [
+      {
+        "file": "ESP32Ping-LICENSE",
+        "sha256": "f2f191a6138b9c9a472b0ca7d27a96f5cab322da911ac8a4042579e0e5a32ecb"
+      }
+    ]
+  },
+  {
+    "name": "ESP Async WebServer",
+    "version": "3.8.1",
+    "url": "https://github.com/ESP32Async/ESPAsyncWebServer",
+    "license_files": [
+      {
+        "file": "ESP_Async_WebServer-LICENSE",
+        "sha256": "a5681bf9b05db14d86776930017c647ad9e6e56ff6bbcfdf21e5848288dfaf1b"
+      }
+    ]
+  },
+  {
+    "name": "EspSoftwareSerial",
+    "version": "8.1.0",
+    "url": "https://github.com/plerup/espsoftwareserial/",
+    "license_files": [
+      {
+        "file": "EspSoftwareSerial-LICENSE",
+        "sha256": "a1a33180d02960ab1c5de36cf20b1a2f0fe9888d83826ad263da5db52f1b183b"
+      }
+    ]
+  },
+  {
+    "name": "LinkedList",
+    "version": "1.3.3",
+    "url": "https://github.com/ivanseidel/LinkedList",
+    "license_files": [
+      {
+        "file": "LinkedList-LICENSE.txt",
+        "sha256": "8901d2afe47dce2d085dfe4752da749ec08cb16859d3feb53b691a33ab39237b"
+      }
+    ]
+  },
+  {
+    "name": "MicroNMEA",
+    "version": "2.0.6",
+    "url": "https://github.com/stevemarple/MicroNMEA",
+    "license_files": [
+      {
+        "file": "MicroNMEA-LICENSE",
+        "sha256": "5525fbd0911b8dcbdc6f0c081ac27fd55b75d6d261c62fa05b9bdc0b72b481f6"
+      }
+    ]
+  },
+  {
+    "name": "NimBLE-Arduino",
+    "version": "2.3.8",
+    "url": "https://github.com/h2zero/NimBLE-Arduino",
+    "license_files": [
+      {
+        "file": "NimBLE-Arduino-LICENSE",
+        "sha256": "1352de53fbef2f779adefaafb5568854c9532d1475955d1331f9f5427f9db713"
+      }
+    ]
+  },
+  {
+    "name": "TFT_eSPI",
+    "version": "2.5.44",
+    "url": "https://github.com/Bodmer/TFT_eSPI",
+    "license_files": [
+      {
+        "file": "TFT_eSPI-license.txt",
+        "sha256": "cb615ba882fde2967e855d326ce8cdebd285ac9c61ead1e14c1e9518895742a2"
+      }
+    ]
+  }
+]
