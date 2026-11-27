@@ -4362,6 +4362,17 @@ void WiFiScan::RunEvilPortal(uint8_t scan_mode, uint16_t color) {
     this->prepareScanStage(TFT_MAGENTA, TFT_BLACK);
   #endif
 
+  // A prior stopscan runs shutdownWiFi(), which tears the radio stack all the
+  // way down (esp_wifi_deinit + esp_netif_deinit). The Arduino WiFi.softAP()
+  // path used by the portal needs the netif layer and default event loop to
+  // exist, so rebuild them here before begin() — the same sequence RunAPScan
+  // performs. Without this, the SoftAP (and its DHCP server) fails to come up
+  // on any portal start that follows a stopscan: @PORTAL:ERROR AP_START_FAILED,
+  // or an AP that no longer hands out DHCP leases. These calls are safe to run
+  // when the stack is already up (they return ESP_ERR_INVALID_STATE, ignored).
+  esp_netif_init();
+  esp_event_loop_create_default();
+
   #ifdef HAS_IDF_3
     esp_wifi_init(&cfg);
   #endif
